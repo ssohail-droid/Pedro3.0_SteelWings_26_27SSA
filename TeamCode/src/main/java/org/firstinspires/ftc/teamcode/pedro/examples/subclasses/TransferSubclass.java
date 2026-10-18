@@ -20,8 +20,10 @@ public class TransferSubclass {
     }
     public void transferOn() {
         transferMotor.setPower(1.0);
-        transferMotor2.setPower(1.0);
+        transferMotor2.setPower(0.2);
     }
+
+
 
     public void transferReverse() {
         transferMotor.setPower(-1.0);

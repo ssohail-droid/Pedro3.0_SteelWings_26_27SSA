@@ -13,12 +13,12 @@ import org.firstinspires.ftc.teamcode.pedro.examples.subclasses.ServoSubclass;
 import org.firstinspires.ftc.teamcode.pedro.examples.subclasses.ShooterSubclass;
 import org.firstinspires.ftc.teamcode.pedro.examples.subclasses.TransferSubclass;
 
-@TeleOp(name = "Anthony's Analog 5")
+@TeleOp(name = "Anthony's Analog 5V2")
 public class AnthonyAnalog5 extends OpMode {
 
     private Follower follower;
 
-    private IntakeSubclass intake;
+    //private IntakeSubclass intake;
     private ShooterSubclass shooter;
     private TransferSubclass transfer;
     private ServoSubclass servo;
@@ -26,19 +26,19 @@ public class AnthonyAnalog5 extends OpMode {
     private ElapsedTime servoTimer = new ElapsedTime();
 
     private final PoseFactory p = PoseFactory.degrees();
-    private Pose startPose = p.of(130,32,180);
+    private Pose startPose = p.of(130, 32, 180);
 
     @Override
     public void init() {
         follower = Constants.create(hardwareMap);
         follower.setPose(startPose);
 
-        intake = new IntakeSubclass();
+        //intake = new IntakeSubclass();
         shooter = new ShooterSubclass();
         transfer = new TransferSubclass();
         servo = new ServoSubclass();
 
-        intake.init(hardwareMap);
+        //intake.init(hardwareMap);
         shooter.init(hardwareMap);
         transfer.init(hardwareMap);
         servo.init(hardwareMap);
@@ -63,24 +63,27 @@ public class AnthonyAnalog5 extends OpMode {
 
         follower.update();
 
-
-// Intake + Transfer
+        // Intake + Transfer
         if (gamepad1.left_trigger > 0.05) {
-            intake.setIntakePower(gamepad1.left_trigger);
-            transfer.setTransferPower(gamepad1.left_trigger);
+            //intake.setIntakePower(gamepad1.left_trigger);
+            //transfer.setTransferPower(gamepad1.left_trigger);
+            transfer.transferOn();
         } else if (gamepad1.left_bumper) {
-            intake.intakeReverse();
+            //intake.intakeReverse();
             transfer.transferReverse();
         } else {
-            intake.intakeOff();
+            //intake.intakeOff();
             transfer.transferOff();
         }
 
-// Shooter
+        // Shooter
         if (gamepad1.right_trigger > 0.05) {
             shooter.shooterOn();
-            if (servoTimer.seconds() > 3) {
+            // Only feed once the flywheel is up to speed
+            if (shooter.isAtVelocity()) {
                 servo.servoShoot();
+            } else {
+                servo.servoBlock();
             }
         } else {
             shooter.shooterOff();
@@ -88,18 +91,23 @@ public class AnthonyAnalog5 extends OpMode {
             servoTimer.reset();
         }
 
-        telemetry.addData("Target RPM", ShooterSubclass.targetRPM);
-        telemetry.addData("Actual RPM", shooter.getRPM());
-        telemetry.addData("RPM Error",ShooterSubclass.targetRPM - shooter.getRPM());
+        // MUST run every loop or the shooter motors get no power
+        shooter.update();
 
-        telemetry.addData("P", ShooterSubclass.P);
-        telemetry.addData("I", ShooterSubclass.I);
-        telemetry.addData("D", ShooterSubclass.D);
-        telemetry.addData("F", ShooterSubclass.F);
+        telemetry.addData("Target RPM", ShooterSubclass.targetRPM);
+        telemetry.addData("Actual RPM", "%.0f", shooter.getRPM());
+        telemetry.addData("RPM Error", "%.0f", ShooterSubclass.targetRPM - shooter.getRPM());
+        telemetry.addData("RPM 1 / 2", "%.0f / %.0f", shooter.getRPM1(), shooter.getRPM2());
+        telemetry.addData("Power", "%.2f", shooter.getPower());
+        telemetry.addData("At Velocity", shooter.isAtVelocity());
+
+        telemetry.addData("kP", ShooterSubclass.kP);
+        telemetry.addData("kI", ShooterSubclass.kI);
+        telemetry.addData("kD", ShooterSubclass.kD);
+        telemetry.addData("kF", ShooterSubclass.kF);
 
         telemetry.addData("Servo Pos", servo.getPosition());
 
         telemetry.update();
-
     }
 }
